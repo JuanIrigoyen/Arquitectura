@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(node -e:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(dir \"C:\\Arquitectura\\src\\index.css\")",
+      "Bash(if not exist html-version mkdir html-version)",
+      "Bash(dir \"C:\\Arquitectura\\html-version\")",
+      "Bash(powershell -Command \"(Get-Content ''C:\\Arquitectura\\html-version\\index.html'').Length\")",
+      "Bash(node convert-to-html.js:*)",
+      "Bash(move:*)",
+      "Bash(node convert-to-html.cjs:*)",
+      "Bash(ren:*)",
+      "Bash(dir \"C:\\Arquitectura\")",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(xcopy:*)",
+      "Bash(start index.html)",
+      "Bash(powershell:*)",
+      "Bash(npm init:*)",
+      "Bash(node generate-html.js:*)",
+      "Bash(node generate-html.cjs:*)",
+      "Bash(node generate-html-v2.cjs:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

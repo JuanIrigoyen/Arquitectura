@@ -1,0 +1,565 @@
+Índice
+- Fundanet Multitenant. Servicios comunes, soporte de usuarios y licencias.
+- Sistema de Mensajería: Interoperabilidad entre aplicaciones de Fundanet
+- Nueva arquitectura web – iFundanet y nuevos productos web.
+- Fundanet Corporate – Aplicación principal Windows
+- Fundanet Corporate – Nueva Api
+- Fundanet Clasic
+- Fundanet CTMS 
+- Fundanet IEC
+- Fundanet AI Agents – Sistema de Automatización Inteligente para Estudios Clínicos
+- Fundanet AI Tickets – Sistema de gestión inteligente de tickets y gastos
+- Fundanet Nexus - Interconectividad de sistemas y plataformas en Centros de Investigación
+- Fundanet Suite - Lanzador de aplicaciónes
+- Power BI
+- Firma digital
+- Infraestructura
+- Varios
+
+
+
+
+
+### Fundanet Multitenant. 
+
+Descripción: Está compuesta por dos sistemas independientes, una API que expone servicios y una web que permite realizar ciertas operaciones. Su misión es exponer servicios comunes a todas las aplicaciones. Esta solución está compuesta por dos elementos principales, la propia API y una Web de Administración.
+
+- La API expone servicios a distintas aplicaciones como Fundanet Corporate,CTMS, IEC, Arukon, Fundraising, etc. Esta permite usar servicios comunes para la gestión de las distintas configuraciones, traducciones, usuarios, permisos y roles, Tenants, Trazabilidad, Despliegue, Licenciamiento, Gestión por anillos, Métricas de uso, etc.). Para mejorar el escalado, la seguridad y el consume, esta se explota a través de un servicio llamado Azure Api Management.
+- Una aplicación Web en Blazor WebAssembly que permite configurar usuarios, licencias, módulos de acceso, sistema de despliegue, etc. Esta Web solo es usada por los usuarios administradores de Semicrol. 
+Tecnologías utilizadas:
+- Net Core 9
+- Asp Aspire
+- Azure Sql Database. Usada para persitencia de usuarios, tenants, configuraciones, accesos, roles, etc.
+- Blazor Web Assembly
+- Soporta versionado
+- Healthy checks
+- Integración con B2C para la administración
+- Sistema de logs con Azure Insights
+- Azure Monitor para monitorización de uso.
+- Azure App Service para la Api
+- Azure App Service para la Web
+- Azure API Management para mayor seguridad, balanceo de carga, etc. Las aplicaciones se conectan a este servicio que a su vez se conecta con la Api.
+Ventajas:
+- Las aplicaciones actuales como Fundanet Corporate, CTMS, IEC, Arukon, Fundraising, etc, consumen los servicios de la API sin duplicar lógica de negocio.
+- El modelo favorece la reutilización de componentes y servicios comunes (usuarios, permisos, licencias, configuración, trazabilidad, etc.) para todo el ecosistema.
+- Al centralizar los servicios en una API, se evita replicar funcionalidades y se reduce el mantenimiento.
+- La API puede escalar horizontalmente de manera independiente a la interfaz web administrativa.
+- Azure API Management actúa como capa de orquestación, seguridad y caché, mejorando la disponibilidad, el control de acceso y el rendimiento.
+Evolución: El sistema continuará evolucionando para integrar sistemas comunes, gestor de informes, gestor documental, auditorias, trazabilidad, métricas de uso y todo tipo de servicios comunes a las aplicaciones. Actualmente se está trabajando por unificar las métricas de uso, la sincronización con B2B para integrar seguridad Oauth, el sistema de logs, etc.
+
+Información adicional: Todas las aplicaciones usarán esta Api por lo que es crítica, una funcionalidad transversal bastante común es el sistema de traducciones que permite cambiar cualquier texto sin necesidad de desplegar, el sistema de despliegue continuo sobre base de datos, las gestión de las licencias de usuarios, etc.
+ 
+Publicación: https://app-multitenantclt-prod-we-001.azurewebsites.net/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Sistema de mensajería 
+Es un sistema que permite la interoperabilidad entre aplicaciones de forma asíncrona. Está basado en Event-Driven Architecture (EDA), que es un estilo de arquitectura en el que las aplicaciones o microservicios se comunican mediante eventos o mensajes, en lugar de llamadas directas (HTTP o RPC). Esto desacopla a los servicios, mejora la escalabilidad y permite procesar operaciones de forma asíncrona y garantizar las transacciones distribuidas entre distintas aplicaciones.
+Usa colas de eventos en Azure Service Bus, integra patrones Outbox e Inbox para garantizar las transacciones y Services Workers o Azure function para integración con distintas aplicaciones. Se han diseñado conectores específicos para Corporate, Fundanet Legacy, CTMS y poco a poco se irán integrando el resto de las aplicaciones.
+Es clave para el funcionamiento de Nexus ya que son sistemas asíncronos que necesitan garantizar la entrega. 
+El sistema es completamente asíncronos diseñado para soportar fallos, escalable, capaz de procesar cientos de miles de mensajes en poco tiempo con la única limitación de las capacidades de los clientes, este sistema permite integración entre aplicaciones propias o externas a través de dos mecanismos:
+	- La integración de mensajes a través de una API. Los clientes solicitan cada cierto tiempo los mensajes pendientes.
+	- La integración de mensajes de forma reactiva a través de Webhooks, cada acción que se produce comunica directamente a las APIs de los clientes para que estos integren los cambios
+Tecnologías utilizadas:
+- Servicios de procesamientos de mensajes con Net Core 9
+- Azure Service Bus: Message broker (bus de mensajería) que actúa como middleware para enviar y recibir eventos JSON entre servicios. 
+- Se basa en mensajes JSON: Estos mensajes representan los eventos de dominio (por ejemplo, UsuarioCreado, PagoConfirmado, etc.) intercambiados entre servicios.
+- Api Rest para exponer los endpoints de integración
+- Utiliza Worker Services (.NET): Procesos de background que consumen los mensajes desde Service Bus e interaccionan con las aplicaciones para integrar la lógica de negocio 
+- Utiliza Azure Functions para la el procesamiento de mensajes en la nube y su integración con Webhookds de clientes externos.
+- Implementa el Patrón Outbox e Inbox: Que permite garantizar consistencia entre base de datos y mensajes enviados, registrando los eventos en una tabla “Outbox” y publicándolos de forma segura y asegurar idempotencia (Inbox, no procesar dos veces el mismo mensaje), guardando un registro de los mensajes ya consumidos.
+- Aplicaciones para monitorizar y reintentar mensajes fallidos.
+- Sistema de trazabilidad y auditoria 
+- Resiliente ante fallos y cortes de Internet.
+Beneficios clave:
+- Desacopla los servicios productores y consumidores.
+- Permite tolerancia a fallos y reintentos controlados.
+- Asegura consistencia eventual entre bases de datos distribuidas.
+- Facilita la escalabilidad horizontal y la resiliencia.
+- Permite auditar los eventos y reproducirlos si es necesario.
+
+Importante: Tanto el Api Multitenant como el sistema de mensajería permiten el diseño de una Suite de aplicaciones capaz de comunicarse entre sí de forma bidireccional, que comparten servicios comunes, pueden escalar en base a la demanda sin requerir más Infraestructura. Son capaces de soportar cientos e incluso miles de clientes con cientos de aplicaciones. Gracias a la infraestructura de la nube y el uso de Azure Service Bus soporta balanceo de carga, alta disponibilidad y seguridad usando mensajes en el protocolo binario protobuff.
+De la misma forma, esta tecnología habilita la posibilidad de enlazar nuestras aplicaciones con aplicaciones de terceros y escalar de forma eficiente.
+Trabajos en curso respecto a los Webhooks, imprescindibles para Nexus y escalabilidad.
+TítuloEstadoAsignado aProgresoDesarrollo webhooks para mensajes reactivosIn Progress44%Definir la arquitectura, seguridad, modelos y tecnologías baseNew0%Inicialización del repositorioDoneFrancisco Sierra Luciarte100%Mantenimiento de webhooksIn ProgressFrancisco Sierra Luciarte77%[Webhooks] Add Custom Headers supportQAMario Viadero Hidalgo100%[Webhooks] Replace Webhooks base componentQAMario Viadero Hidalgo100%[Webhooks - Backend] Manage Message typesQAMario Viadero Hidalgo100%[Webhooks - Messages - Frontend] Webhooks gridQAFrancisco Sierra Luciarte100%[Webhooks - Messages - Frontend] Message typesQAFrancisco Sierra Luciarte100%Configuración de Azure Service BusQAFrancisco Sierra Luciarte0%Add “Notifications Enabled” in app configurationQAMario Viadero Hidalgo0%Create notifications queueQAFrancisco Sierra Luciarte0%Implement Old Worker ServiceQA0%[Dispatcher] Deploy in QANew0%[Dispatcher] Send notifications from queueQA0%[Dispatcher] Authentication handlingQA0%[Dispatcher] Enable message notification manuallyQA0%[Dispatcher] Cancelable messagesQA0%Integración con Azure Key VaultNewFrancisco Sierra Luciarte0%Auditoría y rastreabilidadIn ProgressFrancisco Sierra Luciarte44%[Audit] Possibility to save audit in another datastore by tenant appQAFrancisco Sierra Luciarte100%[Audit] Improvements in log filteringQAFrancisco Sierra Luciarte100%[Audit] FrontendQAFrancisco Sierra Luciarte100%[Audit] Possible technology to be used for audit storageQAFrancisco Sierra Luciarte100%[Audit] Save information on the outcome of the requestQAFrancisco Sierra Luciarte100%[Audit] Manage reattempts of failed notificationsNew0%[Audit] View source entity in notificationNew0%Seguridad y validacionesNew0%[Security] Confirm endpointIn ProgressMario Viadero Hidalgo60%CI/CD y despliegueIn ProgressCarlos Fernández 0%Monitorización y alertasIn ProgressFrancisco Sierra Luciarte32%[Stats] Add statistics page for tenant usage appNew0%[Alerts] Email alerts when notification failNew0%[Healthy Checks] Implement healthy checkNew0%Mejoras Servicio MensajeríaNew0%Add IsWebhook Service Bus Message Property in SenderQAFrancisco Sierra Luciarte100%[Change messaging auditing to SqlServer/Table StorageNew0%
+
+
+### Fundanet Web - Nueva arquitectura – iFundanet y nuevos productos
+
+La nueva arquitectura web permitirá desarrollar aplicaciones escalables y mantenibles para Semicrol, usa una aproximación a Clean Architecture y un modelo basado en CQRS.
+
+Arquitectura:
+
+- Basada en arquitectura limpia (Clean Architecture)
+- Soporte Multitenant, permite aislar datos y configuraciones por cliente o tenant, asegurando independencia y escalabilidad para entornos multiempresa.
+- Separa de forma estricta las capas de dominio, aplicación, infraestructura y presentación. Esto garantiza independencia del framework y facilita el mantenimiento y las pruebas.
+- Soporta DDD (Domain-Driven Design), aplica patrones como Value Objects, Agregados y Entidades Raíz, permitiendo que el modelo represente fielmente el dominio de negocio y sea extensible sin romper dependencias.
+- Implementa comandos y consultas mediante CQRS. Separa la lectura (queries) de la escritura (commands), mejorando la mantenibilidad, la escalabilidad y la capacidad de auditoría.
+
+Tecnologías:
+
+- Implementada en net Core 9. aprovecha las últimas mejoras en rendimiento, soporte nativo de contenedores, asíncronos y seguridad del ecosistema .NET moderno.
+- Uso de Entity Framework Core. Simplifica el acceso a datos mediante ORM, soportando migraciones automáticas, LINQ y compatibilidad con SQL Server Azure.
+- Minimal API. Ofrece un modelo ligero, rápido y de bajo overhead para la exposición de endpoints HTTP, reduciendo complejidad y aumentando el rendimiento.
+- Fluent Validation. Proporciona validaciones declarativas y reutilizables sobre los modelos de dominio y DTOs, asegurando coherencia y reduciendo errores de validación manual.
+- Pruebas unitarias y de integración
+- Asegura calidad y confiabilidad del c??digo mediante test automáticos que validan tanto la lógica interna como la interacción entre componentes.
+- Seguridad basada en OpenID Connect
+- Permite autenticación federada y autorización moderna, compatible con OAuth2, tokens JWT y escenarios B2B/B2C.
+- Integración con Azure B2C
+- Ofrece autenticación de usuarios externos, registro y gestión de identidades, integrando el sistema con el ecosistema de identidad de Azure.
+- Como cliente usa Blazor WebAssembly que ejecuta C# directamente en el navegador, reduciendo la necesidad de JavaScript y aprovechando el mismo modelo de desarrollo que el servidor. Aunque actualmente utiliza esta tecnología, la arquitectura modular permite reemplazar o complementar la interfaz con otros frameworks front-end, facilitando su evolución y adopción en diferentes proyectos o clientes. Podría integrar otras tecnologías como React, Vue, Svelte.
+- Utiliza la librería de componentes Arco basados en controles de Synfusion
+Beneficios:
+
+- Modularidad y mantenibilidad: cada capa tiene responsabilidades claras, lo que simplifica la evolución del sistema. 
+- Escalabilidad y rendimiento: CQRS, Minimal API y la asincronía permiten procesar grandes volúmenes de peticiones de forma eficiente.
+- Seguridad centralizada: integración nativa con OpenID Connect y Azure B2C.
+- Extensibilidad futura: soporte multitenant y arquitectura limpia permiten incorporar nuevos módulos o microservicios fácilmente.
+- Consistencia tecnológica: mismo lenguaje (C#) y ecosistema (.NET) en servidor y cliente, reduciendo la fricción entre capas.
+- Calidad garantizada: validación, testing y diseño por dominio aseguran estabilidad y evolución sostenible.
+
+
+
+### Fundanet Corporate - Nueva API 
+
+El nuevo api permitirá exponer nuevos Endpoints de forma eficiente, escalable de forma horizontal y vertical, robusta, con balanceo de carga y seguridad. Se sitúa detrás de un Azure Api Management que actúa como proxy inverso. Esta arquitectura establece una plataforma sólida para servicios de Fundanet Corporate, lista para integrar antiguos y nuevos servicios
+
+Arquitectura:
+- Arquitectura basada en CQRS y Minimal API
+- Soporta Multitenant
+
+Tecnologías:
+
+- Implementada en net Core 9
+- Seguridad basada en OpenIdConnect
+- Implementación a través de Azure Api Management
+- Asíncrona
+- Soporta versionado
+- Soporta trazabilidad y métricas de uso
+- Gestión de Usuarios, roles y permisos
+
+Beneficios clave:
+
+- Escalabilidad y rendimiento: La API está diseñada para escalar tanto horizontal como verticalmente, permitiendo aumentar capacidad según la demanda.
+- Al estar detrás de Azure API Management, puede balancear carga, cachear respuestas y limitar el tráfico por suscripción o aplicación.
+- La arquitectura asíncrona y la separación CQRS optimizan el rendimiento en operaciones de lectura y escritura.
+- Gracias al uso de .NET 9, la API aprovecha las mejoras en rendimiento, gestión de memoria y seguridad del framework.
+- CQRS permite aislar la lógica de consulta y de comandos, evitando efectos colaterales y reduciendo el riesgo de inconsistencias.
+- Las métricas integradas facilitan detectar cuellos de botella, errores o degradaciones.
+- Autenticación y autorización mediante OpenID Connect garantizan compatibilidad a futuro con Azure AD, B2B y OAuth2.
+- El uso de Azure API Management como proxy inverso añade capas de seguridad: control de tokens, límites de uso, reglas de IP y monitorización.
+- Permite auditar cada llamada, mejorando trazabilidad y cumplimiento normativo.
+- Multitenancy y gobernanza, soporte multitenant nativo: múltiples organizaciones pueden usar la misma API de forma aislada y segura. Mayor escalabilidad a un mínimo coste.
+- Simplifica la gestión de usuarios, roles y permisos, ofreciendo un modelo de acceso unificado y administrable desde un punto central.
+- Facilita mantener coherencia entre entornos (Corporate, CTMS, IEC, etc.).
+- Arquitectura basada en Minimal API: ligera, rápida de desarrollar y fácil de mantener.
+- Soporte de versionado de API que permite evolucionar servicios sin romper compatibilidad con los clientes existentes.
+- Las métricas de uso y trazabilidad permiten conocer el rendimiento real, los patrones de consumo y los puntos de mejora.
+- Integración con Azure Monitor y Application Insights para tener visibilidad completa del ciclo de vida de cada petición.
+
+
+
+
+
+### Fundanet Corporate – Aplicación Windows
+Actualmente trabajando en la migración de Visual Basic a Corporate:
+Arquitectura:
+- N-Layers
+- Entidades Poco
+Tecnologias:
+- Net Framework 4.8
+- Entity Framework 3.11
+- Ado 2.0
+- Net Standard
+- Net Core 9
+- Worker Services
+Objetivos:
+- Eliminación de dependencias y librerías que ponen en riesgo la seguridad
+- Reducción del sistema de despliegue continuo
+- Paralizado desde agosto a excepción de Callejo que continúa haciendo cambios 
+## Mejoras en Corporate
+- Mejora del modelo de datos para pasar a modo PASS (Urgente por el riesgo que representa cada vez más elevado, la arquitectura actual no escala), actualmente paralizado por falta de recursos.
+- Integración de la seguridad en B2B en Fundanet Corporate. 
+- Firma de ensamblados con certificados SSL
+- Soporte para plantillas en la nueva arquitectura
+- Generador de informes genéricos (Devexpress) para todos los clientes
+- Rediseño del gestor documental
+- Rediseño del sistema de notificaciones
+- Propuestas de mejora en el diseño con la integración de más controles de Devexpress que actualmente no soportarnos como el calendario, Gantt, etc. para que se adapten a la nueva arquitectura de presentadores.
+- Migración de la parte Legacy (No ha comenzado)
+- Eliminación de código obsoleto
+- Eliminación de librerías obsoletas
+- Correctivo, debemos minimizarlo en la medida de lo posible, intentar abordar únicamente el que provenga del cambio de datos ya que cualquier corrección pone en riesgo el resto del código, sin test la probabilidad de cambiar algo sin cometer otros errores es mínima. < 20 %.
+Riesgos:
+- Net Framework 4.8 lleva ya 6 años obsoleto, esta tecnología representa un riesgo cada vez más elevado para la organización, tenemos distintos problemas de integración con servicios de Azure, falta de soporte, librerías completamente desactualizadas que ponen en riesgo la seguridad. Desconocemos cuando estos sistemas pueden dejar de funcionar, con el paso del tiempo el riesgo es cada vez más alto.
+
+Mejoras a futuro:
+- Es de vital importancia finalizar la migración de VB6 y avanzar en la mejora del modelo de datos para pasar a un modelo Pas con Azure Sql Server.
+- Después de estos pasos, vamos a tener que cambiar la estrategia para orientarnos a un Backend moderno usando Net Core, estamos estudiando la aproximación hacia una arquitectura de microservicios o similar que nos permita evolucionar el backend de forma independiente para tratar de minimizar los riesgos a medio y largo plazo. Pero esto va a suponer rediseñar algunos conceptos de Corporate especialmente sobre el tratamiento de datos con los grids algunos de los cuales exponen gran cantidad de datos, hay que integrar paginación y otras opciones complejas para soportar filtros, ordenación y búsquedas.
+- Debido a la alta complejidad de algunos módulos, véase nominas, proyectos, etc. Estamos valorando abordar una aproximación CQRS que nos permita reducir las dependencias y optimizar los test.
+- De la misma forma, observando que el proyecto se va a demorar años, una vez concluida la parte de Visual Basic, deberíamos intentar avanzar en una orientación hacia APIs, Arquitecturas de Microservicios, esto nos proporcionaría muchas ventajas, pero nos obligara a cambiar parte del diseño especialmente en consultas grandes, grids que deben soportar paginación, etc. Sin embargo, podría ser una mejor estrategia ya que nuestro Backend pasa a estar en última tecnología.
+### Mejoras en curso
+- Nuevo sistema de métricas de uso
+- Sistemas generales de Trazabilidad
+- Mejoras en el modelo de datos para superar el nivel de compatibilidad exigido en Azure Sql Database.
+- Implementación aproximación CQRS en Fundanet Corporate debido a la complejidad de algunos módulos y rendimiento del sistema de Inyección de dependencias.
+
+
+### Fundanet.AI.Agents – Sistema de Automatización Inteligente para Estudios Clínicos
+
+Es una solución inteligente desarrollada por Semicrol para automatizar tareas críticas y repetitivas en la gestión de estudios clínicos, reduciendo drásticamente el esfuerzo manual y los errores humanos.
+
+Arquitectura:
+
+- CTMS Budget Importer (Backend AI Service): Servicio API en Azure que transforma automáticamente la memoria del estudio clínico (PDF) en un Excel estructurado y validado para su importación directa en el sistema CTMS. Implementa lógica avanzada para Ciclos, Visitas, Procedimientos y reglas de negocio clínicas, asegurando consistencia y cumplimiento normativo.
+- Agente Inteligente Fundanet.AI: Motor basado en IA generativa que actúa como asistente virtual especializado, orquestando el flujo completo de importación, validación y control de calidad de los datos de estudios clínicos.
+- Aplicación Web: Que permite a los clientes subir sus documentos, parametrizar la ejecución y recibir el documento de respuesta.
+
+Está diseñado para integrarse con Fundanet Corporate y otros módulos del ecosistema (CTMS, IEC, Fundraising, etc.).
+
+Tecnologías utilizadas
+
+- Backend: Python 3.10+, FastAPI + Uvicorn
+- Azure AI Foundry
+- Framework IA: Azure OpenAI (GPT-4o, residencia UE)
+- Procesamiento de documentos: Haystack + PII Scrubber + OpenPyXL
+- Cumplimiento y seguridad: Azure Security Center, GDPR/LOPDGDD, cifrado TLS 1.2+, residencia en Azure Europa
+- Integración: Azure Foundry y Azure AD (OpenID Connect)
+- Frontend: Integración directa con los módulos Fundanet Corporate y herramientas de administración de CTMS
+
+Ventajas
+
+- Automatización inteligente: El agente convierte automáticamente memorias de estudio en plantillas CTMS listas para carga, reduciendo horas de trabajo manual y errores.
+- Eficiencia y escalabilidad: Arquitectura asíncrona y tolerante a fallos que permite procesar grandes volúmenes de estudios en paralelo.
+- Cumplimiento y seguridad:
+- Cumple con GDPR y RIA.
+- Todos los datos se procesan y almacenan en Azure UE sin salir del Espacio Económico Europeo. No se usa la información para entrenamiento de modelos.
+- Arquitectura modular: Basada en microservicios, con API RESTful y diseño desacoplado.
+- Facilita la integración de nuevos agentes o módulos (informes, auditorías, métricas, gestor documental).
+- Trazabilidad total: Cabeceras diagnósticas (X-Blob-Id, X-Payload-Validated, X-Autogen-Visits) y logs sin PII garantizan seguimiento y auditoría de cada ejecución.
+- Inteligencia aplicada al dominio clínico: Reglas específicas de negocio (Ciclos, Visitas, Procedimientos) validadas contra catálogos CTMS.
+- Reducción de costes y tiempos: El proceso de carga y validación de memorias de estudio pasa de horas a minutos, liberando al personal investigador.
+Evolución: El sistema evolucionará hacia una plataforma de servicios comunes con agentes especializados, integrando:
+
+- Gestor de informes y trazabilidad ampliada.
+- Métricas de uso y analítica avanzada.
+- Integración B2B con autenticación OAuth y control granular de acceso.
+- Agentes de auditoría y documentación automatizada.
+
+Información adicional
+
+- Residencia de datos: Azure Europa (West Europe / North Europe).
+- Cumplimiento: política de minimización y redacción de datos personales antes de la inferencia (PII Scrubber).
+- Seguridad: cifrado en tránsito y en reposo, roles definidos según GDPR (Responsable, Encargado y Subencargado).
+- Publicación interna: [CTMS Budget Importer – API /process-upload]
+
+
+
+### Fundanet.Tickets – Sistema de gestión inteligente de tickets y gastos
+
+Se trata de una solución desarrollada por Semicrol para la digitalización y automatización del proceso de gestión de tickets y justificantes de gasto. Permite a los usuarios capturar tickets o facturas desde sus dispositivos móviles mediante una fotografía, que el sistema analiza automáticamente con IA para extraer los datos relevantes (importe, fecha, proveedor, IVA, etc.) antes de su validación e integración con las aplicaciones corporativas de Fundanet (Corporate, CTMS, IEC, etc.).
+
+La solución está compuesta por tres elementos principales:
+
+- API central implementada en .NET Core 9, que ofrece servicios REST para el almacenamiento, procesamiento y validación de tickets, así como la integración con los sistemas de Fundanet.
+Se despliega detrás de Azure API Management, garantizando balanceo de carga, seguridad, trazabilidad y escalado dinámico.
+
+- Aplicación Web (Blazor WebAssembly) para usuarios administradores y corporativos.
+Permite revisar los tickets procesados, validar los datos extraídos por IA y aprobar su integración con los sistemas de Fundanet.
+
+- Aplicaciones móviles multiplataforma (Flutter) para Android y iOS, que permiten subir tickets mediante captura de imagen.
+
+   Estas apliaciones se comunican con la API para realizar el reconocimiento OCR, validar la información y registrar los datos procesados.
+
+Tecnologías utilizadas:
+
+- NET Core 9 y ASP.NET Minimal API
+- Blazor WebAssembly
+- Flutter (aplicaciones móviles Android / iOS)
+- Azure API Management (proxy inverso, seguridad, control de acceso y escalado)
+- Microsoft AI Foundry con modelos de reconocimiento OCR e IA generativa
+- Azure Blob Storage para almacenamiento seguro de las imágenes capturadas de tickets
+- Azure SQL Database para almacenar los datos identificados por el OCR en formato JSON estructurado
+- Seguridad basada en OpenID Connect
+- Integración con Azure B2C para autenticación y gestión de usuarios
+- Arquitectura asíncrona, multitenant y escalable
+
+Ventajas
+
+- Captura inteligente y rápida: Los usuarios pueden subir fotos o PDFs desde el móvil; el sistema extrae automáticamente los datos mediante IA y OCR de Microsoft AI Foundry.
+- Automatización y eficiencia: Reduce el esfuerzo manual, minimiza errores y acelera los procesos de validación e integración con Fundanet y otros sistemas.
+-  Seguridad y cumplimiento: Integración con Azure B2C y OpenID Connect, almacenamiento seguro de imágenes en Azure Blob Storage, y cumplimiento del RGPD y LOPDGDD.
+- Escalabilidad y fiabilidad: Infraestructura basada en Azure que garantiza alta disponibilidad, balanceo de carga y procesamiento distribuido.
+-  Integración con el ecosistema Fundanet: Los datos validados se sincronizan con Fundanet Corporate, CTMS, IEC y otros módulos, unificando la gestión de gastos.
+- IA aplicada al negocio: Reconocimiento OCR preciso, con almacenamiento estructurado en SQL Database en formato JSON para análisis posterior.
+- Verificación y trazabilidad: La interfaz web permite revisar y aprobar los datos antes de integrarlos con Fundanet, garantizando trazabilidad total por usuario y operación.
+
+Evolución
+
+- Clasificación automática de categorías de gasto y detección de duplicados.
+- Integración con ERPs y sistemas contables externos.
+- Paneles de métricas y auditoría por usuario, proyecto o tenant.
+- Modelos OCR específicos por país y soporte multilingüe.
+
+Información adicional
+- Residencia de datos: Azure Europa (West Europe / North Europe).
+- Integración actual: Fundanet Corporate, etc.
+- Cumplimiento: RGPD / LOPDGDD.
+
+
+
+
+
+
+
+
+
+
+	
+
+
+### Proyecto Nexus
+Nexus es una plataforma integral diseñada para interconectar diferentes sistemas y plataformas utilizados en los Centros de Investigación facilitando la comunicación y garantizando una integración fluida. Su principal objetivo es facilitar la interoperabilidad entre aplicaciones, historiales clínicos, sistemas de análisis y dispositivos de monitorización, promoviendo una gestión eficiente de la información y mejorando la colaboración entre herramientas especializadas.  
+Nexus es capaz de interaccionar con un gran número de aplicaciones.
+* Fundanet – Ctms e IPharma  
+* Historiales clínicos de la plataforma de SAP Argos 
+* Visor de monitores SAP Argos. 
+* OpenClinica 
+* RedCap 
+* Telemedicina Docline 
+* E-CAP 
+* SISCat 
+* Fenix Erp 
+* Tarjeta sanitaria SCS 
+* Visor HCE SCS 
+* Explotación de datos a través de PowerBi 
+* Integración con dispositivos Apple Health y Android Google Fit SDK 
+
+Tecnologías utilizadas:
+- Mirth Connect versión Comercial
+- Servicios de procesamientos de mensajes desarrollado con Net Core 9
+- Azure Service Bus: Message broker (bus de mensajería) que actúa como middleware para enviar y recibir eventos JSON entre servicios. 
+- Usa mensajes en formato Protobuf: Estos mensajes representan los eventos de dominio (por ejemplo, CreacionPaciente, NuevoEstudio, etc.) intercambiados entre servicios.
+- Api Rest para exponer los endpoints de integración
+- Utiliza Azure Functions para la el procesamiento de mensajes en la nube y su integración con Webhookds de clientes externos.
+- Implementa el Patrón Outbox e Inbox: Que permite garantizar consistencia entre base de datos y mensajes enviados, registrando los eventos en una tabla “Outbox” y publicándolos de forma segura y asegurar idempotencia (Inbox, no procesar dos veces el mismo mensaje), guardando un registro de los mensajes ya consumidos.
+- Aplicaciones para monitorizar y reintentar mensajes fallidos.
+- Sistema de trazabilidad y auditoria 
+- Resiliente ante fallos y cortes de Internet.
+
+Características principales de Nexus: 
+* Interoperabilidad: Conexión fluida entre múltiples sistemas y dispositivos. 
+* Automatización y comunicación: Nexus permite el uso de múltiples protocolos de comunicación, mediante mensajería, servicios basados en eventos, API Rest y otros. 
+* Uso de estándares internacionales: Garantiza la calidad y seguridad en el manejo de la información de salud como HL7, OMOP, etc. 
+* Análisis avanzado: Integración con herramientas como Power BI para la visualización y toma de decisiones basada en datos. 
+
+ Nexus garantiza la interoperabilidad a través de estándares reconocidos internacionalmente como: 
+* API REST, para servicios web modernos y escalables 
+* HL7 FHIR, estándar para el intercambio de información clínica y la interoperabilidad rápida y flexible de datos de salud 
+* OMOP CDM (Observational Medical Outcomes Partnership Common Data Model), para la normalización de datos clínicos y su análisis a gran escala 
+* Mensajería basada en API REST y Webhooks, facilitando notificaciones y actualizaciones en tiempo real. 
+* Integración con SDKs de dispositivos de salud de Android y Apple, para el intercambio de datos de actividad y monitorización médica 
+
+
+
+
+### Fundanet Suite - Lanzador de aplicaciónes
+
+La Suite de aplicaciones trata por un lado de integrar un sistema de Autenticación único basado en B2C, de forma que cada usuario que acceda una vez autenticado tenga la opción de lanzar cualquier aplicación de la Suite a la que se tiene acceso
+
+Una suite de aplicaciones es un conjunto de programas o aplicaciones de software que están diseñados para trabajar juntos y cumplir con una serie de funciones relacionadas, generalmente dentro de un mismo entorno o para un propósito común. Estas aplicaciones suelen estar integradas de manera que puedan compartir datos y funcionalidades, facilitando la colaboración y optimizando los flujos de trabajo.
+
+La idea es tener una entrada común para cada usuario, de forma que este pueda acceder a cada uno de los programas. Esto conforma un punto de entrada único, el sistema además puede mostrar estadísticas y notificaciones, caducidad de las licencias, incidencias en las aplicaciones, estadísticas de uso, etc.
+
+Esta aplicación esta desarrollada en Blazor Web Assembly y usa una autenticación Oauth con B2C, valida, los usuarios, las licencias y las aplicaciones disponible y las presenta para poder acceder a ellas con facilidad.
+
+
+
+
+
+Fundanet CTMS
+
+Fundanet CTMS es una plataforma pensada para gestionar ensayos clínicos (Clinical Trial Management System). Ofrece una solución integrada para los centros de investigación, sitios de ensayos clínicos, universidades y oficinas de transferencia tecnológica. 
+El enfoque del software está en optimizar los procesos operativos, asegurar cumplimiento regulatorio y financiero, y facilitar la colaboración entre roles y departamentos dentro de un ensayo.
+
+Ventajas:
+
+* Mejora de la eficiencia operativa al centralizar y automatizar tareas. 
+* Mejores capacidades analíticas y visibilidad del estado del ensayo. 
+* Potencial para aumentar ingresos mediante facturación más precisa y evitar errores como doble facturación. 
+* Capacidad de adaptación del sistema a las necesidades específicas del sitio de investigación. 
+* Interoperabilidad con otros sistemas (EMR, EDC, facturación).
+
+Arquitectura:
+
+- Framework ABP basado en Asp Net Core y DDD
+- Azure Sql Database
+- Azure Key Vault
+- Azure Blob Storage
+- Integración B2B 
+
+Características principales:
+
+- Gestión de estudios clínicos: Control centralizado de datos, coordinación de tareas, gestión de sitios y participantes, generación de reportes y análisis. 
+- Coordinador clínico.	Manejo de información de los participantes, cumplimiento regulatorio, recopilación de datos y reportes. 
+- Gestión financiera. Gestión presupuestaria, asignación de recursos, contratos y subvenciones, procesos automáticos de facturación y prevención de doble facturación. 
+- Colaboración y comunicación: Integración de roles (investigadores, coordinadores, finanzas) en una plataforma común para decisiones coordinadas. 
+- Integraciones / interoperabilidad: APIs REST, uso de Azure Service Bus, conexión con sistemas de EMR (historias clínicas electrónicas), EDC, sistemas de facturación, etc. 
+
+
+Fundanet IEC
+
+Fundanet IEC es una plataforma especializada para la gestión de comités de ética en ensayos clínicos, estudios observacionales y proyectos biomédicos. Está diseñada para facilitar los procesos del comité de ética en entornos académicos, clínicos e institucionales. 
+El objetivo es soportar la presentación, revisión, aprobación y seguimiento de proyectos de investigación desde el punto de vista ético, con eficiencia, transparencia y cumplimiento regulatorio
+
+Ventajas:
+
+* Eficiencia administrativa: al permitir presentaciones electrónicas y flujos automáticos, reduce papeleo y tiempos. 
+* Mayor control y trazabilidad: con control de versiones y monitoreo continuo, se puede tener un registro claro del estado de cada proyecto. 
+* Mejora en coordinación: al automatizar asignaciones y revisar progresos, los comités de ética pueden trabajar de forma más ordenada. 
+* Flexibilidad del sistema: se puede ajustar según las reglas internas y procesos propios del comité de ética en cada institución. 
+* Transparencia y cumplimiento regulatorio: al centralizar la documentación y controlar versiones, ayuda a reforzar estándares éticos y regulatorios.
+
+Arquitectura:
+
+- Framework ABP basado en Asp Net Core y DDD
+- Azure Sql Database
+- Azure Key Vault
+- Azure Blob Storage
+- Integración B2B 
+
+Características principales:
+
+- Envíos electrónicos:	Permite que los investigadores hagan presentaciones (submissions) mediante un portal seguro en línea, reduciendo la carga administrativa. 
+- Flujo de revisión automatizado: Las tareas de revisión se asignan automáticamente, se monitorea el progreso de cada revisión, y el sistema ayuda a coordinar revisores y estados del proyecto. 
+- Gestión documental integral: Ofrece un repositorio de documentos con control de versiones (version control) para manejar documentos como protocolos, enmiendas, reportes, consentimientos, etc. 
+- Configuración: Posibilidad de adaptar parámetros y preferencias del sistema según las necesidades específicas del comité de ética (por ejemplo reglas internas, plazos, rutas de revisión). 
+- Calendarios: Administración de calendarios para citas, reuniones del comité, plazos importantes y eventos relacionados con el comité de ética. 
+- Gestión de datos: Herramientas para entrada de datos, revisión, verificación, asegurando la integridad de la información relacionada con las presentaciones. 
+- Reportes: Generación de reportes personalizados para análisis del desempeño del comité, estados de proyectos, tiempos de revisión, estadísticas, etc. 
+- Monitoreo: Seguimiento continuo del estado de los proyectos sometidos al comité, control de cumplimiento de protocolos, supervisión del ciclo de vida de las revisiones. 
+- Integración: Capacidad de integrarse con otros sistemas y plataformas utilizados en investigación clínica, para intercambio de datos entre departamentos o sistemas externos. 
+
+Trabajos en curso:
+- Generador de informe de prefacturas para importar en Classic : QA 
+
+### Fundanet Clasic – Aplicación Windows
+Aplicación .net escrita en c# con distintos módulos de gestión, producción científica, etc.
+Arquitectura: Sin definir
+Tecnologías:
+- Ado 2.0
+- Dataset y Datatables
+- Net Framework 3.5 
+- Net Framework 4.8
+- Sql Server on-premise
+- Controles Devexpress
+- Multiples dependendencias de librerías de terceros.
+Estado:
+- Carece de calidad, sin testing, reglas de estilo, etc.
+Mejoras en curso:
+- Importador de pre-facturas para CTMS Classic: QA 
+- Modificar la dotación de presupuesto en los traspasos de pedido con diferente prorrata (Planificado entrega 7 nov) 
+- SII- Modificación de validación NIF no residentes (Planificado entrega 7 nov) 
+- SII – Incorporación de periodos trimestrales en el Libro de Bienes de Inversión (En Enero en cliente) (Planificado entrega 7 nov) 
+- SII - Añadir etiqueta Bienes de Inversión en la comunicación (Planificado entrega 7 nov) 
+- Modelo 190- eliminación de validación (Planificado entrega 7 nov) 
+- [FSJD] Ampliar recurso de estudios clínicos en la API para permitir búsqueda por enfermedad (A estudiar el esfuerzo) 
+- Revisión de actualizaciones de CIP 2.1 (En análisis) 
+- Adaptación del SII de AEAT- para el SII de Agencia tributaria Canaria ( ATC) (En QA) 
+- |I3PT| Añadir el campo de Observaciones de la ME en el grid de visitas (Análisis de cuándo planificarlo) 
+- |I3PT| Añadir en la prefactura la información de la fecha en la que se han realizado las visitas y procedimientos médicos (Análisis de cuándo planificarlo) 
+- Revisar desarrollo TSM Biodiversidad tras cambios en configuración carga (planificarlo para este mes Octubre) 
+Riesgos:
+- Muy alto, el código es inmantenible, cada pequeña corrección pone en riesgo 
+
+Mejoras a futuro:
+- Es de vital importancia reescribir la mayor parte de la aplicación, el coste de refactorizarlo es muchas veces más alto. 
+### Power Bi
+
+Generación de informes de explotación de datos de Fundanet 
+
+Trabajos en curso:
+
+- Imidomics = entregado (en revisión por cliente) 
+- Entrega de sirecs (diciembre 2025) 
+Entregados = 46, 48, 50,52 
+- Pendientes = 55, mod del 46, 76, 77, 56, 64, 80 
+- Migración de informes de FJSD y despliegue del informe de farmacia = 17.Oct 
+
+
+### DocumentSign – Firma digital
+
+Sistema de firma digital de documentos
+
+Estado actual del proyecto. Finalizado
+
+Mejoras propuestas en el sprint de refinamiento, objetivo comienzo el día 16 octubre, finalización día 31 de octubre 
+       Cambios para la apliación:
+* Ordenar por los valores de las columnas
+* Aplicar filtrado por contenido en cada una de las columnas
+* Posicionar la firma al final del documento, agregando página solo si es necesario
+* Diferenciar acciones de firma con y sin previsualización
+* Eliminar el campo “Motivo” en la pantalla de Firma
+* Impedir que las contraseñas se puedan guardar en el navegador
+* Corrección del filtro de búsqueda superior
+* Posible brecha de seguridad al exponer el documentId en la URL
+* Bloquear el menú de acción “Firmar” si el usuario actual ya ha firmado el/los documento(s)
+* Mejorar la visibilidad del mensaje “Actualmente cuenta con un certificado vigente”
+* Corrección de textos y tooltips no definidos o no traducidos
+* Añadir opción de “Cerrar sesión” en el módulo de gestión de firmas
+Respecto a iFundanet
+* Mantener visibles los documentos ya firmados en el Gestor de Firmas
+* Ordenar por los valores de las columnas
+* Aplicar filtrado por contenido en cada una de las columnas
+
+   Otros
+* Mostrar la fecha de última firma en la Gestión de Flujos de Firma
+* Cierre automático de menús desplegables
+
+ 
+
+
+### Infraestructura
+
+Incidencias detectadas en la parte seguridad
+Incidencias detectadas en la administración
+
+Gestión de Finops
+Trabajos con Ingram Micro
+Revisión de licencias
+Proyectos para ISV
+Migración hacia GitHub
+Automatización de alertas
+Seguridad en el desarrollo
+Contratación de otro perfil de Infraestructura
+Gestión con Tokiota
+
+
+### Varios
+ 
+Definición de responsabilidades
+Evaluación y seguimiento de personal
+Horarios, flexibilidad y formación (Azure – Impacto en el programa Gold Partner)
+Orientación hacia objetivos
+Dependencias
+Estrategia Fundanet
+
+
+
+

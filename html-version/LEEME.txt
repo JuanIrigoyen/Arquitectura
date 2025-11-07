@@ -1,0 +1,36 @@
+===============================================
+  FUNDANET SUITE - DOCUMENTACIÓN HTML PURA
+===============================================
+
+ARCHIVO A ABRIR:
+  fundanet.html
+
+CÓMO EJECUTAR:
+  1. Abre el Explorador de Windows
+  2. Navega a: C:\Arquitectura\html-version\
+  3. Haz DOBLE CLIC en: fundanet.html
+  4. Se abre en tu navegador y funciona
+
+NO NECESITAS:
+  - Node.js
+  - npm install
+  - Servidor web
+  - Nada más
+
+SECCIONES INCLUIDAS (ejemplo funcional):
+  - Inicio
+  - Fundanet Multitenant
+  - Fundanet AI Agents
+  - Fundanet AI Tickets
+  - Fundanet Nexus
+
+NOTA:
+  Este es un archivo de demostración con 5 secciones.
+  Funciona con HTML/CSS/JS puro + Tailwind CSS + Lucide Icons desde CDN.
+
+  Si necesitas TODAS las 16 secciones, usa la versión React:
+    cd C:\Arquitectura
+    npm install
+    npm run dev
+
+===============================================

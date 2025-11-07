@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fundanet Suite - Documentación Técnica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .section-content { display: none; }
+    .section-content.active { display: block; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+          <i data-lucide="database" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-gray-900">Fundanet Suite</h1>
+          <p class="text-xs text-gray-500">Documentación Técnica</p>
+        </div>
+      </div>
+      <button onclick="toggleMobileMenu()" class="md:hidden p-2 hover:bg-gray-100 rounded-lg">
+        <i data-lucide="menu" id="menu-icon"></i>
+        <i data-lucide="x" id="close-icon" style="display: none;"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex gap-8">
+
+      <!-- Sidebar -->
+      <aside id="sidebar" class="hidden md:block w-64 flex-shrink-0">
+        <nav class="bg-white rounded-lg shadow-sm p-4 sticky top-24">
+          <h2 class="font-semibold text-gray-900 mb-3 px-2">Navegación</h2>
+          <ul class="space-y-1">
+            <li><button onclick="showSection('home')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors bg-blue-600 text-white"><i data-lucide="home" class="w-5 h-5"></i><span class="text-sm">Inicio</span></button></li>
+            <li><button onclick="showSection('multitenant')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100"><i data-lucide="cloud" class="w-5 h-5"></i><span class="text-sm">Fundanet Multitenant</span></button></li>
+            <li><button onclick="showSection('ai-agents')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100"><i data-lucide="cpu" class="w-5 h-5"></i><span class="text-sm">Fundanet AI Agents</span></button></li>
+            <li><button onclick="showSection('ai-tickets')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100"><i data-lucide="file-text" class="w-5 h-5"></i><span class="text-sm">Fundanet AI Tickets</span></button></li>
+            <li><button onclick="showSection('nexus')" class="nav-btn w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors text-gray-700 hover:bg-gray-100"><i data-lucide="git-branch" class="w-5 h-5"></i><span class="text-sm">Fundanet Nexus</span></button></li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <main class="flex-1 min-w-0">
+
+        <!-- HOME SECTION -->
+        <div id="home-section" class="section-content active">
+          <div class="space-y-8">
+            <div class="text-center mb-12">
+              <h1 class="text-5xl font-bold text-gray-900 mb-4">Fundanet Suite</h1>
+              <p class="text-xl text-gray-600">Ecosistema integral para gestión de investigación clínica</p>
+              <div class="mt-6 flex justify-center gap-4 flex-wrap">
+                <span class="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">.NET Core 9</span>
+                <span class="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">Azure Cloud</span>
+                <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">Microservicios</span>
+                <span class="px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">IA Integrada</span>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+              <button onclick="showSection('multitenant')" class="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left group">
+                <i data-lucide="cloud" class="w-10 h-10 text-blue-600 mb-4 group-hover:scale-110 transition-transform"></i>
+                <h3 class="font-semibold text-gray-900 mb-2">Fundanet Multitenant</h3>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"></i>
+              </button>
+              <button onclick="showSection('ai-agents')" class="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left group">
+                <i data-lucide="cpu" class="w-10 h-10 text-blue-600 mb-4 group-hover:scale-110 transition-transform"></i>
+                <h3 class="font-semibold text-gray-900 mb-2">Fundanet AI Agents</h3>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"></i>
+              </button>
+              <button onclick="showSection('ai-tickets')" class="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left group">
+                <i data-lucide="file-text" class="w-10 h-10 text-blue-600 mb-4 group-hover:scale-110 transition-transform"></i>
+                <h3 class="font-semibold text-gray-900 mb-2">Fundanet AI Tickets</h3>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"></i>
+              </button>
+              <button onclick="showSection('nexus')" class="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left group">
+                <i data-lucide="git-branch" class="w-10 h-10 text-blue-600 mb-4 group-hover:scale-110 transition-transform"></i>
+                <h3 class="font-semibold text-gray-900 mb-2">Fundanet Nexus</h3>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MULTITENANT SECTION -->
+        <div id="multitenant-section" class="section-content">
+          <div class="space-y-8">
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg border border-blue-100">
+              <h1 class="text-4xl font-bold text-gray-900 mb-4">Fundanet Multitenant</h1>
+              <p class="text-lg text-gray-700">Sistema central de servicios compartidos para todo el ecosistema Fundanet</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
+              <p class="text-gray-700">El sistema Multitenant es el núcleo central que proporciona servicios compartidos a todas las aplicaciones del ecosistema Fundanet. Gestiona la autenticación, autorización, tenants, usuarios, licencias y configuración centralizada.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI AGENTS SECTION -->
+        <div id="ai-agents-section" class="section-content">
+          <div class="space-y-8">
+            <div class="bg-gradient-to-r from-violet-50 to-purple-50 p-8 rounded-lg border border-violet-100">
+              <h1 class="text-4xl font-bold text-gray-900 mb-4">Fundanet AI Agents</h1>
+              <p class="text-lg text-gray-700">Sistema de automatización inteligente para estudios clínicos</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción del Proyecto</h2>
+              <p class="text-gray-700 mb-4">Fundanet AI Agents es una solución inteligente desarrollada por Semicrol para automatizar tareas críticas y repetitivas en la gestión de estudios clínicos, reduciendo drásticamente el esfuerzo manual y los errores humanos.</p>
+              <p class="text-gray-700">El sistema transforma automáticamente la memoria del estudio clínico (PDF) en un Excel estructurado y validado para su importación directa en el sistema CTMS.</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Tecnologías</h2>
+              <div class="grid md:grid-cols-3 gap-4">
+                <div class="p-4 bg-blue-100 rounded-lg"><h3 class="font-bold">Python 3.10+</h3><p class="text-xs text-gray-600">FastAPI + Uvicorn</p></div>
+                <div class="p-4 bg-purple-100 rounded-lg"><h3 class="font-bold">Azure AI Foundry</h3><p class="text-xs text-gray-600">Plataforma IA</p></div>
+                <div class="p-4 bg-green-100 rounded-lg"><h3 class="font-bold">GPT-4o</h3><p class="text-xs text-gray-600">Azure OpenAI (UE)</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI TICKETS SECTION -->
+        <div id="ai-tickets-section" class="section-content">
+          <div class="space-y-8">
+            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 p-8 rounded-lg border border-emerald-100">
+              <h1 class="text-4xl font-bold text-gray-900 mb-4">Fundanet AI Tickets</h1>
+              <p class="text-lg text-gray-700">Sistema de gestión inteligente de tickets y gastos</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
+              <p class="text-gray-700">Fundanet.Tickets es una solución desarrollada por Semicrol para la digitalización y automatización del proceso de gestión de tickets y justificantes de gasto. Permite a los usuarios capturar tickets o facturas desde sus dispositivos móviles mediante una fotografía, que el sistema analiza automáticamente con IA.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEXUS SECTION -->
+        <div id="nexus-section" class="section-content">
+          <div class="space-y-8">
+            <div class="bg-gradient-to-r from-sky-50 to-blue-50 p-8 rounded-lg border border-sky-100">
+              <h1 class="text-4xl font-bold text-gray-900 mb-4">Fundanet Nexus</h1>
+              <p class="text-lg text-gray-700">Plataforma de interconectividad de sistemas en Centros de Investigación</p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Descripción</h2>
+              <p class="text-gray-700">Nexus es una plataforma integral diseñada para interconectar diferentes sistemas y plataformas utilizados en los Centros de Investigación facilitando la comunicación y garantizando una integración fluida.</p>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function showSection(sectionId) {
+      // Ocultar todas las secciones
+      const sections = document.querySelectorAll('.section-content');
+      sections.forEach(section => section.classList.remove('active'));
+
+      // Mostrar la sección seleccionada
+      document.getElementById(sectionId + '-section').classList.add('active');
+
+      // Actualizar botones
+      const buttons = document.querySelectorAll('.nav-btn');
+      buttons.forEach(btn => {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+      });
+
+      event.target.closest('.nav-btn').classList.remove('text-gray-700', 'hover:bg-gray-100');
+      event.target.closest('.nav-btn').classList.add('bg-blue-600', 'text-white');
+
+      // Cerrar menú móvil si está abierto
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth < 768) {
+        sidebar.classList.add('hidden');
+      }
+
+      window.scrollTo(0, 0);
+    }
+
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+
+      sidebar.classList.toggle('hidden');
+
+      if (sidebar.classList.contains('hidden')) {
+        menuIcon.style.display = 'block';
+        closeIcon.style.display = 'none';
+      } else {
+        menuIcon.style.display = 'none';
+        closeIcon.style.display = 'block';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      lucide.createIcons();
+    });
+  </script>
+
+</body>
+</html>
