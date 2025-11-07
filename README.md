@@ -174,13 +174,8 @@ npm install
 
 ## Características de la Aplicación
 
-- ✅ Diseño responsive (móvil, tablet, desktop)
-- ✅ Navegación por secciones
-- ✅ Diagramas SVG de arquitectura
-- ✅ Documentación técnica detallada
-- ✅ Componentes modulares y reutilizables
-- ✅ TypeScript para type safety
-- ✅ Hot Module Replacement (HMR)
+
+[...existing content...]
 
 ## Compilar para Producción
 
@@ -195,7 +190,6 @@ Esto generará una carpeta `dist/` con todos los archivos optimizados listos par
 ## Soporte
 
 Para más información sobre las tecnologías utilizadas:
-- React: https://react.dev/
 - Vite: https://vitejs.dev/
 - TypeScript: https://www.typescriptlang.org/
 - Tailwind CSS: https://tailwindcss.com/
